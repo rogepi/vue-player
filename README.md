@@ -1,4 +1,4 @@
-# element-demo
+# vue-player
 
 ## Project setup
 ```
