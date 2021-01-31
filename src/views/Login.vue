@@ -1,11 +1,11 @@
 <template>
   <div>
     <el-form ref="loginForm" :model="form" :rules="rules" class="login-box">
-      <h3 class="login-title">Vue Player</h3>
+      <h3 class="login-title">Vue-Player<sub>@rogepi</sub></h3>
       <el-form-item prop="username">
         <el-input
           type="text"
-          placeholder="请输入账号"
+          placeholder="手机号"
           v-model="form.username"
           clearable
         >
@@ -15,7 +15,7 @@
       <el-form-item prop="password">
         <el-input
           type="password"
-          placeholder="请输入密码"
+          placeholder="密码"
           v-model="form.password"
           show-password
           clearable
@@ -36,20 +36,19 @@
 
     <el-dialog
       title="温馨提示"
-      :visible.sync="dialogVisible"
+      :visible.sync="errorDialog"
       width="30%"
       :before-close="handleClose"
-      ><span>请输入账号和密码</span>
+      ><span>账号或密码输入错误</span>
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialogVisible = false"
-          >确定</el-button
-        >
+        <el-button type="danger" @click="errorDialog = false">确定</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
+import axios from "axios";
 export default {
   name: "Login",
   data() {
@@ -68,21 +67,39 @@ export default {
         ],
       },
       //对话框显示和隐藏
-      dialogVisible: false,
+      errorDialog: false,
+      msg: "",
     };
   },
   methods: {
     onSubmit(formName) {
       //为表单绑定验证功能
       this.$refs[formName].validate((valid) => {
+        var that = this;
         if (valid) {
-          //使用 vue-router路由到指定页面，该方式称之为编程式导航
-          this.$router.push("/Home/" + this.form.username);
-        } else {
-          this.dialogVisible = true;
-          return false;
+          console.log(that.loginCheck(that.form.username, that.form.password));
         }
       });
+    },
+    loginCheck(phone, password) {
+      var that = this;
+      axios
+        .get(
+          "http://musicapi.rogepi.xyz/login/cellphone?phone=" +
+            phone +
+            "&password=" +
+            password
+        )
+        .then(function (response) {
+          // console.log(response);
+          if (response.data.code != 200) {
+            that.errorDialog = true;
+          } else {
+            that.$router.push("/Home/" + response.data.account.id);
+            // that.$router.push({name:"home",params:{response.data.account.id}});
+            // 测试id：4875671908
+          }
+        });
     },
     handleClose: function () {
       console.log("HandleClose, 空函数");
@@ -93,6 +110,9 @@ export default {
 
 
 <style lang="scss" scoped>
+div {
+  text-align: center;
+}
 .login-box {
   background-color: white;
   border: 1px solid #dcdfe6;
@@ -105,13 +125,10 @@ export default {
   box-shadow: 0 0 25px #909399;
   font-size: 1.2em;
 }
-
 .login-title {
-  text-align: center;
   margin: 0 auto 40px auto;
   color: #303133;
 }
-
 .login-button {
   width: 120px;
 }
